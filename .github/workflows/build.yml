@@ -62,7 +62,11 @@ jobs:
           img="${{ steps.meta.outputs.image }}"
           for t in "${{ steps.meta.outputs.hermes_tag }}" "sha-${{ steps.meta.outputs.short_sha }}"; do
             docker tag hermes-voice:test "${img}:${t}"
-            docker push "${img}:${t}"
+            if ! out="$(docker push "${img}:${t}" 2>&1)"; then
+              echo "$out"
+              echo "::error title=Push failed::$(echo "$out" | tail -3 | tr '\n' ' ')"
+              exit 1
+            fi
           done
           echo "### Use this in Coolify" >> "$GITHUB_STEP_SUMMARY"
           echo "\`image: ${img}:${{ steps.meta.outputs.hermes_tag }}\`" >> "$GITHUB_STEP_SUMMARY"
